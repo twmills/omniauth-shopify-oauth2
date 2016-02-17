@@ -60,6 +60,7 @@ describe OmniAuth::Strategies::Shopify do
     it "defaults to callback" do
       url_base = 'http://auth.request.com'
       @request.stub(:url) { "#{url_base}/page/path" }
+      @request.stub(:scheme) { 'http' }
       subject.stub(:script_name) { "" } # to not depend from Rack env
       subject.callback_url.should eq("#{url_base}/auth/shopify/callback")
     end
@@ -111,5 +112,27 @@ describe OmniAuth::Strategies::Shopify do
       subject.credentials['expires'].should eq(false)
     end
 
+  end
+
+  describe '#valid_site?' do
+    it 'returns true if the site contains .myshopify.com' do
+      @options = {:client_options => {:site => 'http://foo.myshopify.com/'}}
+      subject.valid_site?.should eq(true)
+    end
+
+    it 'returns false if the site does not contain .myshopify.com' do
+      @options = {:client_options => {:site => 'http://foo.example.com/'}}
+      subject.valid_site?.should eq(false)
+    end
+
+    it 'uses configurable option for myshopify_domain' do
+      @options = {:client_options => {:site => 'http://foo.example.com/'}, :myshopify_domain => 'example.com'}
+      subject.valid_site?.should eq(true)
+    end
+
+    it 'allows custom port for myshopify_domain' do
+      @options = {:client_options => {:site => 'http://foo.example.com:3456/'}, :myshopify_domain => 'example.com:3456'}
+      subject.valid_site?.should eq(true)
+    end
   end
 end
